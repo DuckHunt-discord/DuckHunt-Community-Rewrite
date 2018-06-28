@@ -11,31 +11,14 @@ print("Loading...")
 
 # First, load the logging modules, they will be useful for later
 
-import coloredlogs
-import logging
-
-coloredlogs.install(level='DEBUG', fmt='%(asctime)s :: %(levelname)s :: %(channelname)s - %(userid)s§%(username)s -> %(message)s')
-logger = logging.getLogger('DuckHunt.Community')
-
-from logging.handlers import RotatingFileHandler
-
-file_handler = RotatingFileHandler('duckhunt_community_all.log', 'a', 10000000, 10)
-file_handler.setLevel(logging.DEBUG)
-logger.addHandler(file_handler)
-
-file_handler = RotatingFileHandler('duckhunt_community_errors.log', 'a', 1000000, 10)
-file_handler.setLevel(logging.WARNING)
-logger.addHandler(file_handler)
-
-logger = logging.LoggerAdapter(logger, {"channelname": "#NONE", "userid": 0, "username": "none#0000"})
-
-logger.debug("Logger created, will now send messages this way")
-logger.info("Hello!")
+from cogs.helpers.init_logger import init_logger
+base_logger, logger = init_logger()
 
 # Setting up asyncio to use uvloop if possible, a faster implementation on the event loop
 import asyncio
 
 try:
+    # noinspection PyUnresolvedReferences
     import uvloop
 except ImportError:
     logger.warning("Using the not-so-fast default asyncio event loop. Consider installing uvloop.")
@@ -64,6 +47,7 @@ class DuckHunt(commands.AutoShardedBot):
 
         self.commands_used = collections.Counter()
         self.admins = [138751484517941259]
+        self.base_logger, self.logger = base_logger, logger
 
         # Load credentials so they can be used later
         with open("credentials.json", "r") as f:
@@ -120,11 +104,7 @@ logger.debug("Loading cogs : ")
 #                 |  #
 #   ADD COGS HERE |  #
 #                 V  #
-#################   ##
-#################   ##
-################   ###
-###############   ####
-##############   #####
+# ###############   ##
 
 cogs = ['cogs.basics', ]
 
