@@ -1,9 +1,10 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 # This is DuckHunt Community V2 (Rewrite)
 # **You have to use it with the rewrite version of discord.py**
 # You can install it using
-# pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
-# You also have to use python 3.6 to run this
+# > pip install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
+# > pip3.7 install -U "git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]"
+# You also have to use python 3.7 to run this
 # Have fun !
 # The doc for d.py rewrite is here : http://discordpy.readthedocs.io/en/rewrite/index.html
 
@@ -12,6 +13,7 @@ print("Loading...")
 # First, load the logging modules, they will be useful for later
 
 from cogs.helpers.init_logger import init_logger
+
 base_logger, logger = init_logger()
 
 # Setting up asyncio to use uvloop if possible, a faster implementation on the event loop
@@ -35,6 +37,9 @@ import discord.ext.commands as commands
 import traceback
 import collections
 import json
+import datetime
+
+from cogs.helpers import checks
 
 logger.debug("Creating a bot instance of commands.AutoShardedBot")
 
@@ -54,6 +59,8 @@ class DuckHunt(commands.AutoShardedBot):
             credentials = json.load(f)
 
         self.token = credentials["token"]
+
+        self.uptime = datetime.datetime.utcnow()
 
     async def on_message(self, message):
         if message.author.bot:
@@ -78,11 +85,18 @@ class DuckHunt(commands.AutoShardedBot):
             await context.send_to(":x: A required argument is missing.")  # Here is the command documentation : \n```\n", language) + context.command.__doc__ +
             # "\n```")
             return
-        # elif isinstance(exception, checks.PermissionsError):
-        #    await self.send_message(ctx=context, message=":x: You are not a server admin")
-        #    return
+        elif isinstance(exception, checks.PermissionsError):
+            await context.send_to(f":x: You don't have the required access level to proceed. \n"
+                                  f"Your current level, **{exception.current}** is lower than the required level : **{exception.required}**")
+
+            return
 
         elif isinstance(exception, discord.ext.commands.errors.CheckFailure):
+            return
+        elif isinstance(exception, discord.ext.commands.errors.BadArgument):
+            await context.send_to(f":x: An argument provided is incorrect: \n"
+                                  f"**{exception}**")
+
             return
         elif isinstance(exception, discord.ext.commands.errors.CommandOnCooldown):
             if context.message.author.id in self.admins:
@@ -97,6 +111,7 @@ class DuckHunt(commands.AutoShardedBot):
 
 
 bot = DuckHunt(command_prefix=["c!", "§"], case_insensitive=True)
+#bot.remove_command("help")
 
 logger.debug("Loading cogs : ")
 
@@ -106,7 +121,7 @@ logger.debug("Loading cogs : ")
 #                 V  #
 # ###############   ##
 
-cogs = ['cogs.basics', ]
+cogs = ['cogs.basics', 'cogs.mod', 'cogs.join_message', 'cogs.restore_roles']
 
 for extension in cogs:
     try:
@@ -128,6 +143,5 @@ finally:
 
     bot.loop.run_until_complete(bot.logout())
 
-    asyncio.sleep(3)
+    bot.loop.run_until_complete(asyncio.sleep(3))
     bot.loop.close()
-
