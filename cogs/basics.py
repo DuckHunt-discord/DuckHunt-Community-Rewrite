@@ -59,8 +59,6 @@ class Basics:
 
         member_list = sorted(ctx.guild.members, key=lambda u: u.name)
 
-
-
         for role_var in sorted(roles.keys()):
             role_name = roles[role_var]
 
@@ -76,7 +74,7 @@ class Basics:
 
             php_code += '```'
 
-            await ctx.send(php_code)
+            await ctx.send(php_code, delete_after=120)
 
 
 

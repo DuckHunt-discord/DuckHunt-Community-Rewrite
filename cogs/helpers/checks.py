@@ -18,6 +18,14 @@ def get_level(user: discord.Member):
         return 3
     elif 304949336989630466 in roles:  # Proficient
         return 2
+    elif 423556200915927050 in roles:  # Website Maintainer
+        return 2
+    elif 195261712201416705 in roles:  # Web interface Developer
+        return 2
+    elif 195261796330897408 in roles:  # Bot Developer
+        return 2
+    elif 270012143007432705 in roles:  # Translator
+        return 2
     elif 306078530712633346 in roles:  # NoBoat
         return 0
     else:
