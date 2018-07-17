@@ -1,3 +1,4 @@
+import collections
 import datetime
 import logging
 import re
@@ -57,6 +58,7 @@ class AutoMod:
     def __init__(self, bot):
         self.bot = bot
         self.invites_regex = re.compile(r'discord(?:app\.com|\.gg)[\/invite\/]?(?:(?!.*[Ii10OolL]).[a-zA-Z0-9]{5,6}|[a-zA-Z0-9\-]{2,32})')
+        self.message_history = collections.defaultdict(lambda: collections.deque(maxlen=10))  # Member -> collections.deque(maxlen=10)
 
     async def get_invites(self, message: str):
 
@@ -105,7 +107,6 @@ class AutoMod:
         check_message = CheckMessage(self.bot, message)
         author_level = get_level(check_message.message.author)
 
-
         if author.status is discord.Status.offline:
             check_message.multiplicator += 0.5
             check_message.debug("Author is offline (probably invisible)")
@@ -137,9 +138,6 @@ class AutoMod:
             check_message.debug("Multiplicator is <= 0, exiting without getting score")
             return  # Multiplicator too low!
 
-
-
-
         check_message.debug("Multiplicator calculation done")
 
         ## Multiplicator calculation done!
@@ -168,6 +166,15 @@ class AutoMod:
         if await self.get_invites_count(check_message) >= 1 and not message.channel.id == 195260377150259211:
             check_message.score += 2.5
             check_message.debug(f"Message contains invite(s) ({check_message.invites_code})")
+
+        repeat = self.message_history[check_message.message.author].count(check_message.message.content)
+        if repeat >= 1:
+            check_message.score += 0.75 * repeat
+            check_message.debug(f"Message was repeated by the author {repeat} times")
+
+        if not check_message.message.content.lower().startswith(("dh", "!", "?", "§", "t!", ">", "<", "-")) or len(check_message.message.content) > 30:
+            # Not a command or something
+            self.message_history[check_message.message.author].append(check_message.message.content)  # Add content for repeat-check later.
 
         check_message.debug("Score calculation done")
         check_message.debug(f"Total for message is {check_message.total}, applying actions if any")
@@ -205,9 +212,12 @@ class AutoMod:
             a = Warn(ctx, author, "Automatic action from automod. Logs: \n" + check_message.logs_for_discord)
             await a.do()
         elif check_message.total >= 4:
+            # Softban / Kick ?
+            # Ban after ?
             pass  # Need to fine-tune the system before adding this
 
-
+        self.bot.logger.info("Automod acted on a message, logs follow.")
+        self.bot.logger.info("\n".join(check_message.logs))
 
     async def on_message(self, message):
         await self.check_message(message)
