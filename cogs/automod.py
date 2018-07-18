@@ -2,8 +2,11 @@ import collections
 import datetime
 import logging
 import re
+from typing import Union
 
 import discord
+from discord.ext import commands
+
 from cogs.helpers import context
 from cogs.helpers.mod_actions import Kick, Ban, Unban, Softban, Warn
 from cogs.helpers.checks import get_level
@@ -18,15 +21,23 @@ class CheckMessage:
         self.message = message
         self.multiplicator = 1
         self.score = 0
+
+        self.old_multiplicator = self.multiplicator
+        self.old_score = self.score
+
         self.logs = []
 
         self.invites = []
 
-        self.debug(f"MESSAGE : {message.content}")
+        self.debug(f"MESSAGE : {message.content:.100}")
 
     @property
     def total(self):
         return self.multiplicator * self.score
+
+    @property
+    def old_total(self):
+        return self.old_multiplicator * self.old_score
 
     @property
     def invites_code(self):
@@ -37,7 +48,10 @@ class CheckMessage:
         return "```\n" + "\n".join(self.logs) + "\n```"
 
     def debug(self, s):
-        fs = f"[s={self.score}, m={self.multiplicator}, t={self.total}] > " + s
+        fs = f"[s={self.score:+.2f} ({self.score - self.old_score:+.2f})," \
+             f" m={self.multiplicator:+.2f} ({self.multiplicator - self.old_multiplicator:+.2f})," \
+             f" t={self.total:+.2f} ({self.total - self.old_total:+.2f})] > " + s
+
         if DEBUG:
             if self.message.channel:
                 cname = self.message.channel.name
@@ -49,6 +63,9 @@ class CheckMessage:
             logger.debug(f"AM " + fs)
 
         self.logs.append(fs)
+        self.old_score = self.score
+        self.old_multiplicator = self.multiplicator
+
 
 
 class AutoMod:
@@ -94,16 +111,24 @@ class AutoMod:
 
             return total
 
-    async def check_message(self, message):
+
+    @commands.command()
+    @commands.guild_only()
+    async def automod_debug(self, ctx, *, message_str):
+        ctx.message.content = message_str
+        cm = await self.check_message(ctx.message, act=False)
+        await ctx.send_to(cm.logs_for_discord)
+
+    async def check_message(self, message, act=True) -> Union[CheckMessage, None]:
         await self.bot.wait_until_ready()
 
         author = message.author
 
         if author.bot:
-            return  # ignore messages from other bots
+            return None  # ignore messages from other bots
 
         if message.guild is None:
-            return  # ignore messages from PMs
+            return None  # ignore messages from PMs
 
         check_message = CheckMessage(self.bot, message)
         author_level = get_level(check_message.message.author)
@@ -137,7 +162,7 @@ class AutoMod:
 
         if check_message.multiplicator <= 0:
             check_message.debug("Multiplicator is <= 0, exiting without getting score")
-            return  # Multiplicator too low!
+            return check_message  # Multiplicator too low!
 
         check_message.debug("Multiplicator calculation done")
 
@@ -162,7 +187,7 @@ class AutoMod:
         mentions = set(message.mentions)
         if len(mentions) > 3:
             check_message.score += 1
-            check_message.debug(f"Message mentions more than 3 people ({mentions})")
+            check_message.debug(f"Message mentions more than 3 people ({[a.name + '#' + a.discriminator for a in mentions]})")
 
         if await self.get_invites_count(check_message) >= 1 and not message.channel.id == 195260377150259211:
             check_message.score += 2.5
@@ -181,7 +206,8 @@ class AutoMod:
             check_message.debug(f"Message contains {bad_words_count} bad words ({', '.join(bad_words_in_message)})")
 
         if not check_message.message.content.lower().startswith(("dh", "!", "?", "§", "t!", ">", "<", "-")) or len(check_message.message.content) > 30\
-                and check_message.message.content.lower() not in ['yes', 'no', 'maybe', 'hey', 'hello', 'oui', 'non', 'bonjour', '\o', 'o/', ':)', ':D', ':(', 'ok', 'this', 'that', 'yup']:
+                and check_message.message.content.lower() not in ['yes', 'no', 'maybe', 'hey', 'hello', 'oui', 'non', 'bonjour', '\o', 'o/', ':)', ':D', ':(', 'ok', 'this', 'that', 'yup']\
+                and act:
             # Not a command or something
             self.message_history[check_message.message.author].append(check_message.message.content)  # Add content for repeat-check later.
 
@@ -194,32 +220,32 @@ class AutoMod:
         if check_message.total >= 2:
             check_message.debug(f"Deleting message because score **{check_message.total}** >= 2")
             try:
-                await check_message.message.delete()
+                if act:
+                    await check_message.message.delete()
             except discord.errors.NotFound:
                 check_message.debug(f"Message already deleted!")
 
             try:
                 await check_message.message.author.send(f"Heya!\n"
-                                                        f"I deleted your message in {check_message.message.channel.mention} because you tripped my auto detection ratio. This system is brand new, and probably need to be improved.\n"
+                                                        f"I deleted your message in {check_message.message.channel.mention} because you tripped my auto detection ratio. "
+                                                        f"This system is brand new, and probably need to be improved.\n"
                                                         f"\n"
                                                         f"If you feel this is an error, please report the following logs to Eyesofcreeper#0001: \n"
-                                                        f"\n"
-                                                        f"{check_message.logs_for_discord}\n"
-                                                        f"\n"
                                                         f"Thanks for your cooperation and remember to maintain a safe space!")
+                await check_message.message.author.send(f"{check_message.logs_for_discord:.1990}")
 
             except discord.errors.Forbidden:
                 pass
-
-        else:  # Score too low to do anything else.
-            return
+        else:  # Too low to do anything else
+            return check_message
 
         # That's moderation acts, where the bot grabs his BIG HAMMER and throw it in the user face
         # Warning
         if check_message.total >= 3:
             check_message.debug(f"Warning user because score **{check_message.total}** >= 3")
-            a = Warn(ctx, author, "Automatic action from automod. Logs: \n" + check_message.logs_for_discord)
-            await a.do()
+            if act:
+                a = Warn(ctx, author, "Automatic action from automod. Logs: \n" + check_message.logs_for_discord)
+                await a.do()
         elif check_message.total >= 4:
             # Softban / Kick ?
             # Ban after ?
@@ -227,6 +253,7 @@ class AutoMod:
 
         self.bot.logger.info("Automod acted on a message, logs follow.")
         self.bot.logger.info("\n".join(check_message.logs))
+        return check_message
 
     async def on_message(self, message):
         await self.check_message(message)

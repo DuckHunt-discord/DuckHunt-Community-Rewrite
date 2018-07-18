@@ -40,7 +40,10 @@ class BaseAction:
         e.colour = self.logging_embed_colour
         e.title = self.logging_embed_title.format(case_number=self.current_case, action=self.action)
         e.description = self.reason
-        e.add_field(name="Responsible Moderator", value=str(self.ctx.author) + " (" + self.ctx.author.mention + ")", inline=False)
+        if self.ctx.author.id != self.on.id:
+            e.add_field(name="Responsible Moderator", value=str(self.ctx.author) + " (" + self.ctx.author.mention + ")", inline=False)
+        else:
+            e.add_field(name="Responsible Moderator", value=f"AutoMod by {self.ctx.bot.user.mention}", inline=False)
         e.add_field(name="Victim", value=(str(self.on) if not isinstance(self.on, discord.Object) else "") + " (<@" + str(self.on.id) + ">)", inline=False)
         e.timestamp = datetime.datetime.now()
         e.set_author(name=self.on.id)
