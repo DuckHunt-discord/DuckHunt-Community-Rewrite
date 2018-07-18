@@ -9,6 +9,7 @@ from cogs.helpers.mod_actions import Kick, Ban, Unban, Softban, Warn
 from cogs.helpers.checks import get_level
 
 DEBUG = False
+BAD_WORDS = ['nigga', 'fuck']
 
 
 class CheckMessage:
@@ -58,7 +59,7 @@ class AutoMod:
     def __init__(self, bot):
         self.bot = bot
         self.invites_regex = re.compile(r'discord(?:app\.com|\.gg)[\/invite\/]?(?:(?!.*[Ii10OolL]).[a-zA-Z0-9]{5,6}|[a-zA-Z0-9\-]{2,32})')
-        self.message_history = collections.defaultdict(lambda: collections.deque(maxlen=10))  # Member -> collections.deque(maxlen=10)
+        self.message_history = collections.defaultdict(lambda: collections.deque(maxlen=7))  # Member -> collections.deque(maxlen=7)
 
     async def get_invites(self, message: str):
 
@@ -120,7 +121,7 @@ class AutoMod:
             check_message.debug("Author account joined less than a day ago")
 
         if author.is_avatar_animated():
-            check_message.multiplicator -= 0.5
+            check_message.multiplicator -= 0.75
             check_message.debug("Author account is nitro'd (or at least I can detect an animated avatar)")
 
         if len(author.roles) > 1:
@@ -128,7 +129,7 @@ class AutoMod:
             check_message.debug("Author account have a role in the server")
 
         if author_level == 0:
-            check_message.multiplicator += 0.20
+            check_message.multiplicator += 0.25
             check_message.debug("Author is bot-banned")
         elif author_level >= 2:
             check_message.multiplicator -= 0.75
@@ -172,7 +173,15 @@ class AutoMod:
             check_message.score += 0.75 * repeat
             check_message.debug(f"Message was repeated by the author {repeat} times")
 
-        if not check_message.message.content.lower().startswith(("dh", "!", "?", "§", "t!", ">", "<", "-")) or len(check_message.message.content) > 30:
+        bad_words_in_message = {b_word for b_word in BAD_WORDS if b_word in check_message.message.content.lower()}
+        bad_words_count = len(bad_words_in_message)
+
+        if bad_words_count >= 1:
+            check_message.score += 0.15 * bad_words_count
+            check_message.debug(f"Message contains {bad_words_count} bad words ({', '.join(bad_words_in_message)})")
+
+        if not check_message.message.content.lower().startswith(("dh", "!", "?", "§", "t!", ">", "<", "-")) or len(check_message.message.content) > 30\
+                and check_message.message.content.lower() not in ['yes', 'no', 'maybe', 'hey', 'hello', 'oui', 'non', 'bonjour', '\o', 'o/', ':)', ':D', ':(', 'ok', 'this', 'that', 'yup']:
             # Not a command or something
             self.message_history[check_message.message.author].append(check_message.message.content)  # Add content for repeat-check later.
 
