@@ -206,7 +206,7 @@ class AutoMod:
             check_message.debug(f"Message contains {bad_words_count} bad words ({', '.join(bad_words_in_message)})")
 
         if not check_message.message.content.lower().startswith(("dh", "!", "?", "§", "t!", ">", "<", "-")) or len(check_message.message.content) > 30\
-                and check_message.message.content.lower() not in ['yes', 'no', 'maybe', 'hey', 'hello', 'oui', 'non', 'bonjour', '\o', 'o/', ':)', ':D', ':(', 'ok', 'this', 'that', 'yup']\
+                and check_message.message.content.lower() not in ['yes', 'no', 'maybe', 'hey', 'hi', 'hello', 'oui', 'non', 'bonjour', '\o', 'o/', ':)', ':D', ':(', 'ok', 'this', 'that', 'yup']\
                 and act:
             # Not a command or something
             self.message_history[check_message.message.author].append(check_message.message.content)  # Add content for repeat-check later.
