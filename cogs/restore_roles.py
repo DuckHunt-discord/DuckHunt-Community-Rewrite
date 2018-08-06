@@ -25,21 +25,21 @@ class Roles:
         try:
             file_name = str(member.id) + ".json"
             with open(self.root_dir + file_name, "r") as infile:
-                m_roles = map(int, json.load(infile))
+                m_roles = set(map(int, json.load(infile)))
         except FileNotFoundError:
             return []
 
         roles = []
 
         for role in member.guild.roles:
-            if role.id in m_roles:
+            if role.id in m_roles and "everyone" not in role.name:
                 roles.append(role)
         roles_names = [r.name for r in roles]
 
         self.bot.logger.info(f"Adding role(s) {roles_names} to {member.name}, as requested by get_and_assign_roles in the file {self.root_dir}{file_name}")
         await member.add_roles(*roles, reason="Automatic roles restore")
 
-        return [r.name for r in roles]
+        return roles_names
 
     async def save_roles(self, member):
         file_name = str(member.id) + ".json"

@@ -51,6 +51,7 @@ class BaseAction:
 
     async def log(self):
         self.ctx.logger.warning(f"[MOD] {self.action}-ing user {self.on} - by {self.ctx.author}")
+        await self.log_to_file()
 
         await self.logging_channel.send(embed=await self._get_embed())
 
@@ -84,6 +85,9 @@ class BaseAction:
     async def execute(self):
         pass
 
+    async def thresholds_enforcer(self):
+        pass
+
     async def do(self):
         try:
             await self.on.send(embed=await self._get_embed())
@@ -98,6 +102,7 @@ class BaseAction:
 
         await self.execute()
         await self.ctx.send_to(":ok_hand:", delete_after=60)
+        await self.thresholds_enforcer()
 
 
 class Kick(BaseAction):
@@ -110,6 +115,8 @@ class Kick(BaseAction):
 
     async def execute(self):
         await self.on.kick(reason=self.reason)
+
+
 
 
 class Ban(BaseAction):

@@ -134,7 +134,7 @@ class AutoMod:
         author_level = get_level(check_message.message.author)
 
         if author.status is discord.Status.offline:
-            check_message.multiplicator += 0.5
+            check_message.multiplicator += 0.15
             check_message.debug("Author is offline (probably invisible)")
 
         if author.created_at > datetime.datetime.now() - datetime.timedelta(days=7):
@@ -176,9 +176,9 @@ class AutoMod:
             check_message.score += 1
             check_message.debug(f"Message is written in CAPS LOCK (% of caps: {caps_percentage} —  total length: {total_letters})")
 
-        if len(message.embeds) >= 1:
-            check_message.score += 5
-            check_message.debug(f"Message from a USER contain an EMBED !? (Used to circumvent content blocking)")
+        #if len(message.embeds) >= 1:
+        #    check_message.score += 5
+        #    check_message.debug(f"Message from a USER contain an EMBED !? (Used to circumvent content blocking)")
 
         if "@everyone" in message.content and not message.mention_everyone:
             check_message.score += 1
@@ -194,8 +194,8 @@ class AutoMod:
             check_message.debug(f"Message contains invite(s) ({check_message.invites_code})")
 
         repeat = self.message_history[check_message.message.author].count(check_message.message.content)
-        if repeat >= 1:
-            check_message.score += 0.75 * repeat
+        if repeat >= 3:
+            check_message.score += 0.25 * repeat
             check_message.debug(f"Message was repeated by the author {repeat} times")
 
         bad_words_in_message = {b_word for b_word in BAD_WORDS if b_word in check_message.message.content.lower()}

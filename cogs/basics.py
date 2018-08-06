@@ -13,7 +13,6 @@ class Basics:
     def __init__(self, bot):
         self.bot = bot
 
-
     def get_bot_uptime(self):
         now = datetime.datetime.utcnow()
         delta = now - self.bot.uptime
