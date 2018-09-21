@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from cogs.helpers import context
-from cogs.helpers.mod_actions import Kick, Ban, Unban, Softban, Warn
+from cogs.helpers.mod_actions import Kick, Ban, Unban, Softban, Warn, Note
 from cogs.helpers.checks import get_level
 
 DEBUG = False
@@ -221,7 +221,10 @@ class AutoMod:
             check_message.debug(f"Deleting message because score **{check_message.total}** >= 2")
             try:
                 if act:
+                    a = Note(ctx, author, "Automod deleted a message from this user. Logs: \n" + check_message.logs_for_discord)
+                    await a.do()
                     await check_message.message.delete()
+
             except discord.errors.NotFound:
                 check_message.debug(f"Message already deleted!")
 
@@ -241,18 +244,19 @@ class AutoMod:
 
         # That's moderation acts, where the bot grabs his BIG HAMMER and throw it in the user face
         # Warning
-        if check_message.total >= 3:
-            check_message.debug(f"Warning user because score **{check_message.total}** >= 3")
+        if check_message.total >= 2.5:
+            check_message.debug(f"Warning user because score **{check_message.total}** >= 2.5")
             if act:
                 a = Warn(ctx, author, "Automatic action from automod. Logs: \n" + check_message.logs_for_discord)
                 await a.do()
-        elif check_message.total >= 4:
+        elif check_message.total >= 3.5:
+
             # Softban / Kick ?
             # Ban after ?
             pass  # Need to fine-tune the system before adding this
 
-        self.bot.logger.info("Automod acted on a message, logs follow.")
-        self.bot.logger.info("\n".join(check_message.logs))
+        ctx.logger.info("Automod acted on a message, logs follow.")
+        ctx.logger.info("\n".join(check_message.logs))
         return check_message
 
     async def on_message(self, message):
