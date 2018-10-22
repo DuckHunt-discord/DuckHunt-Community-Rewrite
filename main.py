@@ -121,7 +121,7 @@ logger.debug("Loading cogs : ")
 #                 V  #
 # ###############   ##
 
-cogs = ['cogs.basics', 'cogs.mod', 'cogs.automod', 'cogs.join_message', 'cogs.restore_roles', 'cogs.notify']
+cogs = ['cogs.basics', 'cogs.mod', 'cogs.automod', 'cogs.join_message', 'cogs.restore_roles', 'cogs.notify', 'cogs.chains']
 
 for extension in cogs:
     try:
