@@ -12,7 +12,7 @@ from cogs.helpers.mod_actions import Kick, Ban, Unban, Softban, Warn, Note
 from cogs.helpers.checks import get_level
 
 DEBUG = False
-BAD_WORDS = ['nigga', 'fuck']
+BAD_WORDS = ['nigga', 'fuck', 'cunt', 'dick', 'cock']
 
 
 class CheckMessage:
