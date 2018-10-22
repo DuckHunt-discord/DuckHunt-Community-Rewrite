@@ -187,7 +187,8 @@ class AutoMod:
         mentions = set(message.mentions)
         if len(mentions) > 3:
             check_message.score += 1
-            check_message.debug(f"Message mentions more than 3 people ({[a.name + '#' + a.discriminator for a in mentions]})")
+            m_list = [a.name + '#' + a.discriminator for a in mentions]
+            check_message.debug(f"Message mentions more than 3 people ({m_list})")
 
         if await self.get_invites_count(check_message) >= 1 and not message.channel.id == 195260377150259211:
             check_message.score += 2.5
