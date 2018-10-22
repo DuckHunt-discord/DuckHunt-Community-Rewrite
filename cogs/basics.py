@@ -76,10 +76,5 @@ class Basics:
             await ctx.send(php_code, delete_after=120)
 
 
-
-
-
-
-
 def setup(bot):
     bot.add_cog(Basics(bot))

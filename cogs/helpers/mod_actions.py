@@ -117,8 +117,6 @@ class Kick(BaseAction):
         await self.on.kick(reason=self.reason)
 
 
-
-
 class Ban(BaseAction):
     def __init__(self, ctx, on, reason):
         super().__init__(ctx, on, reason)
@@ -166,15 +164,6 @@ class Softban(BaseAction):
         await self.ctx.guild.ban(self.on, reason=self.formatted_reason)
         await self.ctx.guild.unban(self.on, reason=self.formatted_reason)
 
-class Note(BaseAction):
-    def __init__(self, ctx, on, reason):
-        super().__init__(ctx, on, reason)
-
-        self.logging_embed_colour = discord.Colour.dark_grey()
-        self.action = "Note"
-
-        if isinstance(on, int):
-            self.on = discord.Object(id=self.on)
 
 class Warn(BaseAction):
     def __init__(self, ctx, on, reason):
@@ -182,6 +171,17 @@ class Warn(BaseAction):
 
         self.logging_embed_colour = discord.Colour.orange()
         self.action = "Warn"
+
+        if isinstance(on, int):
+            self.on = discord.Object(id=self.on)
+
+
+class Note(BaseAction):
+    def __init__(self, ctx, on, reason):
+        super().__init__(ctx, on, reason)
+
+        self.logging_embed_colour = discord.Colour.dark_grey()
+        self.action = "Note"
 
         if isinstance(on, int):
             self.on = discord.Object(id=self.on)
