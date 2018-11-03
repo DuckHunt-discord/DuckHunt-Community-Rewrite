@@ -1,4 +1,5 @@
 import datetime
+import random
 
 import discord
 from discord.ext import commands
@@ -41,6 +42,19 @@ class Basics:
         Nobody can do this anyway, the required permission is too high.
         """
         pass
+
+    @commands.command()
+    @have_required_level(1)
+    async def random_staff(self, ctx, count=2):
+        """
+        Give you the names of `count` members of staff.
+        """
+        roles = [discord.utils.get(ctx.guild.roles, name=role_name) for role_name in ['Owner', 'Moderator', 'Translator', 'Bug Hunters', 'Proficient', 'Partner', 'Donator', 'DuckEnigma Event Winner 2018']]
+        possibles = [m for m in ctx.guild.members if any([r in m.roles for r in roles])]
+        selected = [m.name + "#" + m.discriminator for m in random.choices(possibles, k=count)]
+
+        await ctx.send_to(', '.join(selected))
+
 
     @commands.command()
     @have_required_level(2)

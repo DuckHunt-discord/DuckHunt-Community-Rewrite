@@ -149,7 +149,7 @@ class AutoMod:
             check_message.multiplicator -= 0.75
             check_message.debug("Author account is nitro'd (or at least I can detect an animated avatar)")
 
-        if len(author.roles) > 1:
+        if len(author.roles) > 2:  # Role duckies is given by default
             check_message.multiplicator -= 0.10
             check_message.debug("Author account have a role in the server")
 

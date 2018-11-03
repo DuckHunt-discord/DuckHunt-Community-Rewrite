@@ -126,6 +126,5 @@ class Mod:
         a = Warn(ctx, member, reason)
         await a.do()
 
-
 def setup(bot):
     bot.add_cog(Mod(bot))

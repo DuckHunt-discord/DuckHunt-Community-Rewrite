@@ -25,7 +25,7 @@ def get_case_list(user:discord.User):
             case = Ban.get_old(case_json)
         elif action == 'Unban':
             case = Unban.get_old(case_json)
-        elif action == 'Softban':
+        elif action == 'SoftBan':
             case = Softban.get_old(case_json)
         elif action == 'Warn':
             case = Warn.get_old(case_json)

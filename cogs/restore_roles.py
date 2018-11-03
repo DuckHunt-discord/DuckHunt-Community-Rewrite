@@ -27,13 +27,15 @@ class Roles:
             with open(self.root_dir + file_name, "r") as infile:
                 m_roles = set(map(int, json.load(infile)))
         except FileNotFoundError:
-            return []
+            m_roles = []
 
         roles = []
 
         for role in member.guild.roles:
             if role.id in m_roles and "everyone" not in role.name:
                 roles.append(role)
+            elif role.id == 504981870686109697:
+                roles.append(role)  # Add the duckies role
         roles_names = [r.name for r in roles]
 
         self.bot.logger.info(f"Adding role(s) {roles_names} to {member.name}, as requested by get_and_assign_roles in the file {self.root_dir}{file_name}")
